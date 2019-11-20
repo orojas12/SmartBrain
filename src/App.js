@@ -21,6 +21,21 @@ const particlesOptions = {
 }
 
 class App extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      imageUrl: '',
+    }
+  }
+
+  onButtonClick = () => {
+    console.log(this.state.imageUrl)
+  }
+  
+  onTextInput = (event) => {
+    this.setState({imageUrl: event.target.value})
+  }
+
   render() {
     return (
       <div className="App">
@@ -28,7 +43,7 @@ class App extends React.Component {
         <Navigation />
         <Logo />
         <Rank />
-        <ImageLinkForm />
+        <ImageLinkForm onTextInput={this.onTextInput} onButtonClick={this.onButtonClick} />
 
 
       {/* 
