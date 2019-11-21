@@ -8,6 +8,10 @@ import Particles from 'react-particles-js';
 import 'tachyons';
 import './components/Logo/Logo.css'
 
+// const app = new Clarifai.App({
+//   apiKey: '8b9b7396a5904eceba280345b0195a1c'
+//  });
+
 const particlesOptions = {
   particles: {
     number: {
@@ -28,11 +32,11 @@ class App extends React.Component {
     }
   }
 
-  onButtonClick = () => {
+  onButtonSubmit = () => {
     console.log(this.state.imageUrl)
   }
   
-  onTextInput = (event) => {
+  onInputChange = (event) => {
     this.setState({imageUrl: event.target.value})
   }
 
@@ -43,7 +47,7 @@ class App extends React.Component {
         <Navigation />
         <Logo />
         <Rank />
-        <ImageLinkForm onTextInput={this.onTextInput} onButtonClick={this.onButtonClick} />
+        <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit} />
 
 
       {/* 
