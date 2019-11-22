@@ -36,6 +36,7 @@ class App extends React.Component {
       faceBox: {},
       route: 'signin',
       isSignedIn: false,
+      willRegister: false,
     }
   }
 
@@ -70,43 +71,65 @@ class App extends React.Component {
   }
   
   onInputChange = (event) => {
-    this.setState({imageUrl: event.target.value})
+    this.setState({imageUrl: event.target.value});
   }
 
-  onRouteChange = (route) => {
-    if (route === 'signout') {
-      this.setState({isSignedIn: false})
-    } else if (route === 'home') {
-    this.setState({isSignedIn: true})
-    }
-    this.setState({route: route})
+  register = () => {
+    this.signIn(); //this is temporary until user account creation is added
+  }
+
+  willRegister = () => {
+    this.setState({willRegister: true});
+  }
+
+  willSignIn = () => {
+    this.setState({willRegister: false})
+  }
+
+  signIn = () => {
+    this.setState({
+      willRegister: false, 
+      isSignedIn: true //this is temporary until user authentication is added
+    }); 
+  }
+
+  signOut = () => {
+    this.setState({isSignedIn: false});
   }
 
   render() {
+    let content;
+    if (this.state.isSignedIn === true) {
+      content = 
+        <div>
+            <Logo />
+            <Rank />
+            <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit} />
+            <FaceRecognition imageUrl={this.state.imageUrl} faceBox={this.state.faceBox} />
+        </div>
+    } else if (this.state.willRegister === true) {
+        content = 
+          <div>
+            <Register signIn={this.signIn} />
+          </div>
+    } else {
+        content =
+          <div>
+            <SignIn willRegister={this.willRegister} signIn={this.signIn} />
+          </div>
+    }
+  
     return (
       <div className="App">
         <Particles className='particles' params={particlesOptions} />
-        <Navigation isSignedIn={this.state.isSignedIn} onRouteChange={this.onRouteChange} />
-        { this.state.route === 'home'
-          ? <div>
-              <Logo />
-              <Rank />
-              <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit} />
-              <FaceRecognition imageUrl={this.state.imageUrl} faceBox={this.state.faceBox} />
-            </div>
-          : (
-            this.state.route === 'signin' 
-            ? <SignIn onRouteChange={this.onRouteChange} />
-            : <Register onRouteChange={this.onRouteChange} />
-          )
-            
-        }
-      {/* 
-          <Navigation />
-          <Logo />
-          <ImageLinkForm />
-          <FaceReognition /> 
-      */}
+        <Navigation 
+          isSignedIn={this.state.isSignedIn} 
+          signOut={this.signOut} 
+          willRegister={this.willRegister} 
+          willSignIn={this.willSignIn} 
+        />
+        {content}
+
         <p>Brain icon made by SmashIcons from www.flaticon.com</p>
       </div>
     );
