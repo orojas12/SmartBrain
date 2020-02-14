@@ -1,5 +1,6 @@
 {
   "name": "facerecognitionbrain",
+  "homepage": "http://orojas12.github.io/SmartBrain"
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -7,7 +8,7 @@
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-particles-js": "^2.7.0",
-    "react-scripts": "3.2.0",
+    "react-scripts": "^3.3.1",
     "react-tilt": "^0.1.4",
     "tachyons": "^4.11.1"
   },
@@ -31,5 +32,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "gh-pages": "^2.2.0"
   }
 }
