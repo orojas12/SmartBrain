@@ -37,7 +37,24 @@ class App extends React.Component {
       route: 'signin',
       isSignedIn: false,
       willRegister: false,
+      user: {
+        id: '',
+        name: '',
+        email: '',
+        entries: 0,
+        joined: ''
+      }
     }
+  }
+
+  loadUser = (data) => {
+    this.setState({user: {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      entries: data.entries,
+      joined: data.joined
+    }})
   }
 
   calculateFace = (data) => {
@@ -60,14 +77,32 @@ class App extends React.Component {
   }
 
   onButtonSubmit = () => {
-    console.log(this.state.imageUrl);
     app.models
       .predict(
         "a403429f2ddf4b49b307e318f00e528b", 
         this.state.imageUrl
       )
-      .then(response => this.drawFaceBox(this.calculateFace(response)))
-      .catch(err => console.log(err));
+      .then(response => {
+        if (response) {
+          fetch('http://localhost:3001/image', 
+            {
+              method: 'put',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify(
+                {
+                  id: this.state.user.id
+                }
+              )
+            }
+          )
+          .then(response => response.json())
+          .then(count => {
+            this.setState(Object.assign(this.state.user, { entries: count}))
+          })
+        }
+        this.drawFaceBox(this.calculateFace(response))
+      })
+      .catch(err => console.log(err))
   }
   
   onInputChange = (event) => {
@@ -103,19 +138,19 @@ class App extends React.Component {
       content = 
         <div>
             <Logo />
-            <Rank />
+            <Rank name={this.state.user.name} entries={this.state.user.entries} />
             <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit} />
             <FaceRecognition imageUrl={this.state.imageUrl} faceBox={this.state.faceBox} />
         </div>
     } else if (this.state.willRegister === true) {
         content = 
           <div>
-            <Register signIn={this.signIn} />
+            <Register loadUser={this.loadUser} signIn={this.signIn} />
           </div>
     } else {
         content =
           <div>
-            <SignIn willRegister={this.willRegister} signIn={this.signIn} />
+            <SignIn willRegister={this.willRegister} loadUser={this.loadUser} signIn={this.signIn} />
           </div>
     }
   
