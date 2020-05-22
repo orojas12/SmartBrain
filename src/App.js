@@ -1,5 +1,4 @@
 import React from 'react';
-import './App.css';
 import Navigation from './components/Navigation/Navigation';
 import Logo from './components/Logo/Logo';
 import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
@@ -8,13 +7,9 @@ import Rank from './components/Rank/Rank';
 import SignIn from './components/SignIn/SignIn';
 import Register from './components/Register/Register';
 import Particles from 'react-particles-js';
-import Clarifai from 'clarifai';
 import 'tachyons';
+import './App.css';
 import './components/Logo/Logo.css'
-
-const app = new Clarifai.App({
-  apiKey: '8b9b7396a5904eceba280345b0195a1c'
- });
 
 const particlesOptions = {
   particles: {
@@ -28,33 +23,25 @@ const particlesOptions = {
   }
 }
 
+const initialState = {
+    imageFormInput: '',
+    imageUrl: '',
+    faceBox: {},
+    route: 'signin',
+    user: {
+      id: '',
+      name: '',
+      email: '',
+      entries: 0,
+      joined: ''
+    }
+}
+
+
 class App extends React.Component {
   constructor() {
     super();
-    this.state = {
-      imageUrl: '',
-      faceBox: {},
-      route: 'signin',
-      isSignedIn: false,
-      willRegister: false,
-      user: {
-        id: '',
-        name: '',
-        email: '',
-        entries: 0,
-        joined: ''
-      }
-    }
-  }
-
-  loadUser = (data) => {
-    this.setState({user: {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      entries: data.entries,
-      joined: data.joined
-    }})
+    this.state = initialState;
   }
 
   calculateFace = (data) => {
@@ -62,7 +49,6 @@ class App extends React.Component {
     const image = document.getElementById('inputimage');
     const width = Number(image.width)
     const height = Number(image.height)
-    console.log(width, height)
     return {
       leftCol: face.left_col * width,
       topRow: face.top_row * height,
@@ -72,16 +58,28 @@ class App extends React.Component {
   }
 
   drawFaceBox = (faceBox) => {
-    console.log(faceBox)
     this.setState({ faceBox })
   }
 
-  onButtonSubmit = () => {
-    app.models
-      .predict(
-        "a403429f2ddf4b49b307e318f00e528b", 
-        this.state.imageUrl
-      )
+  onDetectFaceSubmit = () => {
+    this.setState({imageUrl: this.state.imageFormInput});
+    fetch('http://localhost:3001/imageUrl', 
+      {
+        method: 'post',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(
+          {
+            input: this.state.imageFormInput
+          }
+        )
+      }
+    )
+      .then(response => response.json())
+      .then(data => {
+        const faceBox = this.calculateFace(data);
+        this.drawFaceBox(faceBox);
+        return data;
+      })
       .then(response => {
         if (response) {
           fetch('http://localhost:3001/image', 
@@ -99,72 +97,73 @@ class App extends React.Component {
           .then(count => {
             this.setState(Object.assign(this.state.user, { entries: count}))
           })
+          .catch(console.log)
         }
-        this.drawFaceBox(this.calculateFace(response))
       })
       .catch(err => console.log(err))
   }
   
-  onInputChange = (event) => {
-    this.setState({imageUrl: event.target.value});
+  onImageFormInput = (event) => {
+    this.setState({imageFormInput: event.target.value});
+  }
+
+  loadUser = (user) => {
+    this.setState({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        entries: user.entries,
+        joined: user.joined
+      },
+      route: 'home'
+    })
   }
 
   register = () => {
-    this.signIn(); //this is temporary until user account creation is added
-  }
-
-  willRegister = () => {
-    this.setState({willRegister: true});
-  }
-
-  willSignIn = () => {
-    this.setState({willRegister: false})
+    this.setState({route: 'register'})
   }
 
   signIn = () => {
-    this.setState({
-      willRegister: false, 
-      isSignedIn: true //this is temporary until user authentication is added
-    }); 
+    this.setState({route: 'signin'})
   }
 
   signOut = () => {
-    this.setState({isSignedIn: false});
+    this.setState(initialState)
   }
 
   render() {
-    let content;
-    if (this.state.isSignedIn === true) {
+    let content = <div>no content</div>;
+    if (this.state.route === 'home') {
       content = 
         <div>
             <Logo />
             <Rank name={this.state.user.name} entries={this.state.user.entries} />
-            <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit} />
+            <ImageLinkForm onImageFormInput={this.onImageFormInput} onDetectFaceSubmit={this.onDetectFaceSubmit} />
             <FaceRecognition imageUrl={this.state.imageUrl} faceBox={this.state.faceBox} />
         </div>
-    } else if (this.state.willRegister === true) {
+    } else if (this.state.route === 'register') {
         content = 
           <div>
             <Register loadUser={this.loadUser} signIn={this.signIn} />
           </div>
-    } else {
-        content =
-          <div>
-            <SignIn willRegister={this.willRegister} loadUser={this.loadUser} signIn={this.signIn} />
-          </div>
-    }
+      } else {
+          content =
+            <div>
+              <SignIn loadUser={this.loadUser} register={this.register} />
+            </div>
+      }
   
     return (
       <div className="App">
         <Particles className='particles' params={particlesOptions} />
         <Navigation 
-          isSignedIn={this.state.isSignedIn} 
+          route={this.state.route}
           signOut={this.signOut} 
-          willRegister={this.willRegister} 
-          willSignIn={this.willSignIn} 
+          signIn={this.signIn} 
+          register={this.register} 
         />
         {content}
-
         <p>Brain icon made by SmashIcons from www.flaticon.com</p>
       </div>
     );
